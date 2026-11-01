@@ -434,12 +434,11 @@ def next_turn():
     update_stats()
 
 def draw_animals():
-    # Рисуем кроликов
+
     for rabbit in rabbits:
         x = rabbit["x"] * CELL_SIZE
         y = rabbit["y"] * CELL_SIZE
 
-        # Уши
         canvas.create_oval(
             x + 9, y + 2,
             x + 15, y + 17,
@@ -451,33 +450,27 @@ def draw_animals():
             fill="gray", outline="black"
         )
 
-        # Тело
         canvas.create_oval(
             x + 5, y + 12,
             x + 30, y + 31,
             fill="gray", outline="black"
         )
 
-        # Глаз
         canvas.create_oval(
             x + 23, y + 17,
             x + 26, y + 20,
             fill="black"
         )
-
-        # Нос
         canvas.create_oval(
             x + 29, y + 22,
             x + 32, y + 25,
             fill="pink", outline="black"
         )
 
-    # Рисуем волков
     for wolf in wolves:
         x = wolf["x"] * CELL_SIZE
         y = wolf["y"] * CELL_SIZE
 
-        # Хвост
         canvas.create_line(
             x + 5, y + 19,
             x + 1, y + 13,
@@ -485,14 +478,12 @@ def draw_animals():
             fill="gray", width=3
         )
 
-        # Тело
         canvas.create_oval(
             x + 5, y + 12,
             x + 27, y + 30,
             fill="gray", outline="black"
         )
 
-        # Уши
         canvas.create_polygon(
             x + 12, y + 14,
             x + 12, y + 4,
@@ -500,7 +491,6 @@ def draw_animals():
             fill="gray", outline="black"
         )
 
-        # Морда
         canvas.create_polygon(
             x + 22, y + 15,
             x + 34, y + 20,
@@ -508,14 +498,12 @@ def draw_animals():
             fill="gray", outline="black"
         )
 
-        # Красный глаз
         canvas.create_oval(
             x + 24, y + 17,
             x + 27, y + 20,
             fill="red"
         )
 
-        # Запас жизни
         life_color = "green" if wolf["life"] > 5 else "red"
 
         canvas.create_text(
