@@ -1,3 +1,9 @@
+BG_COLOR = "#10141C"
+PANEL_COLOR = "#1B2330"
+GRID_COLOR = "#303B4D"
+TEXT_COLOR = "#E6EDF7"
+ACCENT_COLOR = "#2457A6"
+BUTTON_HOVER = "#326FC4"
 import tkinter as tk
 from tkinter import ttk
 import random
@@ -129,19 +135,29 @@ def apply_moves(moves):
 
 root = tk.Tk()
 root.title("Симуляция экосистемы")
+root.configure(bg=BG_COLOR)
+root.option_add("*Font", "Arial 10")
 
 canvas = tk.Canvas(
     root,
     width=COLS * CELL_SIZE,
-    height=ROWS * CELL_SIZE
+    height=ROWS * CELL_SIZE,
+    bg=PANEL_COLOR,
+    highlightthickness=0
 )
 canvas.pack(padx = 10, pady = 10)
-stats_label = tk.Label(root, text = "")
+stats_label = tk.Label(
+    root,
+    text="",
+    bg=BG_COLOR,
+    fg=TEXT_COLOR,
+    font=("Arial", 13, "bold")
+)
 stats_label.pack()
-data_frame = tk.Frame(root)
+data_frame = tk.Frame(root, bg=BG_COLOR)
 data_frame.pack(pady=5)
 
-history_frame = tk.Frame(data_frame)
+history_frame = tk.Frame(data_frame, bg=BG_COLOR)
 history_frame.pack(side="left", padx=10)
 history_table = ttk.Treeview(
     history_frame,
@@ -153,8 +169,30 @@ history_table.heading("day", text="День")
 history_table.heading("wolves", text="Волки")
 history_table.heading("rabbits", text="Кролики")
 style = ttk.Style()
-style.configure("Treeview", rowheight=28, font=("Arial", 11))
-style.configure("Treeview.Heading", font=("Arial", 11, "bold"))
+style.theme_use("clam")
+
+style.configure(
+    "Treeview",
+    background=PANEL_COLOR,
+    fieldbackground=PANEL_COLOR,
+    foreground=TEXT_COLOR,
+    rowheight=28,
+    font=("Arial", 11),
+    borderwidth=0
+)
+
+style.configure(
+    "Treeview.Heading",
+    background="#263449",
+    foreground=TEXT_COLOR,
+    font=("Arial", 11, "bold")
+)
+
+style.map(
+    "Treeview",
+    background=[("selected", ACCENT_COLOR)],
+    foreground=[("selected", TEXT_COLOR)]
+)
 history_table.column("day", width=85, anchor="center", stretch=False)
 history_table.column("wolves", width=100, anchor="center", stretch=False)
 history_table.column("rabbits", width=100, anchor="center", stretch=False)
@@ -163,8 +201,8 @@ fig = Figure(figsize=(7, 4), dpi=120)
 ax = fig.add_subplot(111)
 graph_canvas = FigureCanvasTkAgg(fig, master=data_frame)
 graph_canvas.get_tk_widget().pack(side="left", padx=10)
-controls_frame = tk.Frame(root)
-controls_frame.pack(pady = 5)
+controls_frame = tk.Frame(root, bg=BG_COLOR)
+controls_frame.pack(pady=5)
 tk.Label(controls_frame, text = "Кролики").grid(row = 0, column = 0)
 rabbit_entry = tk.Entry(controls_frame, width = 6)
 rabbit_entry.grid(row = 0, column = 1)
@@ -185,7 +223,7 @@ for row in range(ROWS):
         y2 = y1 + CELL_SIZE
         canvas.create_rectangle(
             x1, y1, x2, y2,
-            outline = 'BLACK'
+            outline = GRID_COLOR,
 
         )
 def move_animals(animals):
@@ -332,28 +370,73 @@ def update_stats():
 
 running = False
 
+
 def update_history():
     history_table.insert(
         "",
         "end",
         values=(day, len(wolves), len(rabbits))
     )
+
     rows = history_table.get_children()
     if len(rows) > 18:
         history_table.delete(rows[0])
+
     history_days.append(day)
     rabbits_history.append(len(rabbits))
     wolves_history.append(len(wolves))
+
+    # Очищаем старый график
     ax.clear()
-    ax.plot(history_days, rabbits_history, color="green", label="Кролики")
-    ax.plot(history_days, wolves_history, color="red", label="Волки")
-    ax.set_xlabel("Дни")
-    ax.set_ylabel("Количество животных")
-    ax.legend(loc="upper left", bbox_to_anchor=(1, 1))
+
+    # Цвета графика
+    fig.patch.set_facecolor(BG_COLOR)
+    ax.set_facecolor(PANEL_COLOR)
+
+    # Строим графики
+    ax.plot(
+        history_days,
+        rabbits_history,
+        color="#65D68A",
+        linewidth=2.5,
+        marker="o",
+        markersize=3,
+        label="Кролики"
+    )
+
+    ax.plot(
+        history_days,
+        wolves_history,
+        color="#FF6B75",
+        linewidth=2.5,
+        marker="o",
+        markersize=3,
+        label="Волки"
+    )
+
+    ax.set_xlabel("Дни", color=TEXT_COLOR)
+    ax.set_ylabel("Количество животных", color=TEXT_COLOR)
+
+    ax.tick_params(colors=TEXT_COLOR)
+
+    for spine in ax.spines.values():
+        spine.set_color(GRID_COLOR)
+
+    ax.grid(color=GRID_COLOR, alpha=0.6)
+
+    legend = ax.legend(loc="upper left")
+    legend.get_frame().set_facecolor(PANEL_COLOR)
+    legend.get_frame().set_edgecolor(GRID_COLOR)
+
+    for label in legend.get_texts():
+        label.set_color(TEXT_COLOR)
+
     ax.relim()
     ax.autoscale_view()
+
     fig.tight_layout()
-    graph_canvas.draw()
+    graph_canvas.draw_idle()
+
 
 def auto_run():
     global running
@@ -427,84 +510,94 @@ def next_turn():
             canvas.create_rectangle(
                 x1, y1,
                 x1 + CELL_SIZE, y1 + CELL_SIZE,
-                outline="black"
+                outline= GRID_COLOR
             )
 
     draw_animals()
     update_stats()
 
-def draw_animals():
 
+def draw_animals():
     for rabbit in rabbits:
         x = rabbit["x"] * CELL_SIZE
         y = rabbit["y"] * CELL_SIZE
 
+        # Уши
         canvas.create_oval(
-            x + 9, y + 2,
-            x + 15, y + 17,
-            fill="gray", outline="black"
+            x + 8, y + 2,
+            x + 15, y + 19,
+            fill="#F0F0F0",
+            outline="#AAB4C0"
         )
+
         canvas.create_oval(
             x + 17, y + 2,
-            x + 23, y + 17,
-            fill="gray", outline="black"
-        )
-
-        canvas.create_oval(
-            x + 5, y + 12,
-            x + 30, y + 31,
-            fill="gray", outline="black"
-        )
-
-        canvas.create_oval(
-            x + 23, y + 17,
-            x + 26, y + 20,
-            fill="black"
+            x + 24, y + 19,
+            fill="#F0F0F0",
+            outline="#AAB4C0"
         )
         canvas.create_oval(
-            x + 29, y + 22,
-            x + 32, y + 25,
-            fill="pink", outline="black"
+            x + 5, y + 13,
+            x + 29, y + 30,
+            fill="#E6EDF7",
+            outline="#9BA9BA",
+            width=1
         )
-
+        canvas.create_oval(
+            x + 19, y + 9,
+            x + 30, y + 21,
+            fill="#FFFFFF",
+            outline="#9BA9BA"
+        )
+        canvas.create_oval(
+            x + 26, y + 13,
+            x + 28, y + 15,
+            fill="#202630"
+        )
+        canvas.create_oval(
+            x + 29, y + 17,
+            x + 32, y + 20,
+            fill="#FF8FA3",
+            outline=""
+        )
     for wolf in wolves:
         x = wolf["x"] * CELL_SIZE
         y = wolf["y"] * CELL_SIZE
-
         canvas.create_line(
-            x + 5, y + 19,
-            x + 1, y + 13,
+            x + 5, y + 20,
+            x + 1, y + 15,
             x + 3, y + 25,
-            fill="gray", width=3
+            fill="#66758A",
+            width=4
         )
-
         canvas.create_oval(
-            x + 5, y + 12,
+            x + 5, y + 13,
             x + 27, y + 30,
-            fill="gray", outline="black"
+            fill="#66758A",
+            outline="#303B4D",
+            width=2
         )
-
         canvas.create_polygon(
-            x + 12, y + 14,
-            x + 12, y + 4,
-            x + 19, y + 13,
-            fill="gray", outline="black"
+            x + 10, y + 15,
+            x + 11, y + 3,
+            x + 19, y + 14,
+            fill="#66758A",
+            outline="#303B4D"
         )
-
         canvas.create_polygon(
-            x + 22, y + 15,
+            x + 20, y + 13,
             x + 34, y + 20,
-            x + 22, y + 26,
-            fill="gray", outline="black"
+            x + 21, y + 27,
+            fill="#9AA7B8",
+            outline="#303B4D"
         )
-
         canvas.create_oval(
-            x + 24, y + 17,
-            x + 27, y + 20,
-            fill="red"
+            x + 23, y + 15,
+            x + 26, y + 18,
+            fill="#FF4444",
+            outline=""
         )
-
-        life_color = "green" if wolf["life"] > 5 else "red"
+        life_color = "#65D68A" if wolf["life"] > 5 else "#FF4444"
 
         canvas.create_text(
             x + CELL_SIZE - 5,
@@ -514,6 +607,7 @@ def draw_animals():
             font=("Arial", 9, "bold"),
             anchor="se"
         )
+
 
 def reset_simulation():
     global rabbits, wolves, occupied, day, running
@@ -572,7 +666,7 @@ def reset_simulation():
             canvas.create_rectangle(
                 x1, y1,
                 x1 + CELL_SIZE, y1 + CELL_SIZE,
-                outline="black"
+                outline= GRID_COLOR
             )
 
     draw_animals()
@@ -581,7 +675,7 @@ def reset_simulation():
     button.config(state="normal")
 update_stats()
 draw_animals()
-button = tk.Button(root, text = "Отправить Ракеты на Киев", command = next_turn)
+button = tk.Button(root, text = "Шаг", command = next_turn)
 button.pack()
 reset_button = tk.Button(
     root,
